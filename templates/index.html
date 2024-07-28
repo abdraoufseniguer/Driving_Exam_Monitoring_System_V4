@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #video-container {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+        }
+        #log-container {
+            width: 100%;
+            max-width: 600px;
+            height: 100%;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .log-entry {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px;
+            border-bottom: 1px solid #ccc;
+        }
+        .log-entry img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+        }
+        #download-button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="video-container">
+        <img src="{{ url_for('video_feed') }}" id="video-feed">
+    </div>
+    <div id="log-container"></div>
+    <button id="download-button" onclick="downloadLogs()">Download Logs</button>
+    <script>
+        function updateLog(logEntry) {
+            const logContainer = document.getElementById('log-container');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+                <span>${logEntry.time} - ID: ${logEntry.id} ${logEntry.event}</span>
+                <img src="${logEntry.img}" alt="Captured Image">
+            `;
+            logContainer.appendChild(entry);
+        }
+
+        function downloadLogs() {
+            window.location.href = '/download_logs';
+        }
+
+        (async function fetchLogs() {
+            const response = await fetch('/logs.txt');
+            const logs = await response.text();
+            const logEntries = logs.split('\n').filter(log => log).map(log => {
+                const [time, idEvent] = log.split(' - ');
+                const [id, event] = idEvent.split(' ');
+                return { time, id, event };
+            });
+            logEntries.forEach(updateLog);
+        })();
+    </script>
+</body>
+</html>
